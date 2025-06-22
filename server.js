@@ -5,14 +5,7 @@ const cors = require('cors');
 
 const app = express();
 
-// =================================================================
-// INÍCIO DO CÓDIGO DE DIAGNÓSTICO (TEMPORÁRIO)
-// =================================================================
-console.log("--- INICIANDO DIAGNÓSTICO DO SERVIDOR ---");
-console.log("Verificando a variável de ambiente ASAAS_API_KEY...");
-console.log("Valor recebido:", process.env.ASAAS_API_KEY);
-console.log("--- FIM DO DIAGNÓSTICO ---");
-// =================================================================
+
 
 app.use(cors());
 app.use(express.json());
