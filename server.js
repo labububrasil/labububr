@@ -13,7 +13,7 @@ app.use(express.json());
 // --- CONFIGURAÇÕES IMPORTANTES ---
 // Agora só precisamos da sua chave de API.
 // Ela será lida da "Environment Variable" que você configurou no painel da Render.
-const ASAAS_API_KEY = process.env.$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjBkMDM3YzA4LTU0OWMtNGY3Ny1hYjFmLWZlNzk4N2VkNzk4OTo6JGFhY2hfOGY0MzNlYzctNjlmNi00ZjMyLTk4ZTctYjBiYWNiMTJjNGIw;
+const ASAAS_API_KEY = process.env.$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjZkMGYxNWNhLTE3OGUtNDZjZC04YWIxLTg2YjQ0N2Q2NmQ5Yjo6JGFhY2hfM2YyZjM4ZmMtY2M0OC00ZjZkLWFkOGYtZmY5MzIwNDY3MGM4;
 
 // URL base da API do Asaas.
 const ASAAS_API_URL = 'https://api.asaas.com/api/v3';
