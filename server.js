@@ -5,13 +5,19 @@ const cors = require('cors');
 
 const app = express();
 
-
+// =================================================================
+// INÍCIO DO CÓDIGO DE DIAGNÓSTICO (TEMPORÁRIO)
+// =================================================================
+console.log("--- INICIANDO DIAGNÓSTICO DO SERVIDOR ---");
+console.log("Verificando a variável de ambiente ASAAS_API_KEY...");
+console.log("Valor recebido pelo Render:", process.env.ASAAS_API_KEY);
+console.log("--- FIM DO DIAGNÓSTICO ---");
+// =================================================================
 
 app.use(cors());
 app.use(express.json());
 
-const ASAAS_API_KEY = process.env.$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjZkMGYxNWNhLTE3OGUtNDZjZC04YWIxLTg2YjQ0N2Q2NmQ5Yjo6JGFhY2hfM2YyZjM4ZmMtY2M0OC00ZjZkLWFkOGYtZmY5MzIwNDY3MGM4; 
-const CUSTOMER_ID = process.env.CUSTOMER_ID; // Mesmo que não estejamos usando, vamos manter por enquanto.
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY; 
 const ASAAS_API_URL = 'https://api.asaas.com/api/v3'; 
 
 app.use(express.static(__dirname));
@@ -20,11 +26,10 @@ app.post('/gerar-pix', async (req, res) => {
     console.log("LOG: Requisição para /gerar-pix recebida.");
 
     if (!ASAAS_API_KEY) {
-        console.error("ERRO GRAVE: Chave de API (ASAAS_API_KEY) não está configurada nas Variáveis de Ambiente do Render.");
+        console.error("ERRO GRAVE: O servidor não encontrou a ASAAS_API_KEY nas variáveis de ambiente.");
         return res.status(500).json({ success: false, message: "Erro de configuração interna do servidor." });
     }
     
-    // ... (o resto do código continua o mesmo)
     const cobranca = {
         billingType: "PIX",
         value: 38.84,
@@ -32,16 +37,13 @@ app.post('/gerar-pix', async (req, res) => {
         description: "Pedido Toca da Labubu - Boneco Colecionável",
         customer: {
             name: "Cliente Site Labubu",
-            cpfCnpj: "60922170000155" // Lembre-se de colocar seu CPF/CNPJ aqui
+            cpfCnpj: "60922170000155" // IMPORTANTE: Coloque seu CPF/CNPJ aqui
         }
     };
 
     try {
         const chargeResponse = await axios.post(`${ASAAS_API_URL}/payments`, cobranca, {
-            headers: {
-                'Content-Type': 'application/json',
-                'access_token': ASAAS_API_KEY
-            }
+            headers: { 'Content-Type': 'application/json', 'access_token': ASAAS_API_KEY }
         });
 
         const paymentId = chargeResponse.data.id;
@@ -51,7 +53,7 @@ app.post('/gerar-pix', async (req, res) => {
             headers: { 'access_token': ASAAS_API_KEY }
         });
         
-        console.log("LOG: QR Code obtido com sucesso.");
+        console.log("LOG: Dados do QR Code obtidos com sucesso.");
 
         return res.status(200).json({
             success: true,
