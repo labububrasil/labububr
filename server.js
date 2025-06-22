@@ -1,84 +1,99 @@
-// server.js
+// Importa os pacotes necessários que foram instalados pelo package.json
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
 
+// Inicializa o aplicativo Express, que é a base do nosso servidor
 const app = express();
 
+// Adiciona um "middleware" que permite ao servidor entender dados no formato JSON
+app.use(express.json());
+
+
 // --- CONFIGURAÇÕES IMPORTANTES ---
+// As chaves secretas são lidas das "Environment Variables" que você configurou no painel da Render.
+// Isso é crucial para a segurança, pois mantém suas chaves fora do código.
+const ASAAS_API_KEY = process.env.$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjBkMDM3YzA4LTU0OWMtNGY3Ny1hYjFmLWZlNzk4N2VkNzk4OTo6JGFhY2hfOGY0MzNlYzctNjlmNi00ZjMyLTk4ZTctYjBiYWNiMTJjNGIw; 
+const CUSTOMER_ID = process.env.cus_123544606;
 
-// 1. SUBSTITUA PELA SUA NOVA CHAVE DE API SECRETA DO ASAAS.
-//    NUNCA COMPARTILHE ESSE ARQUIVO COM A CHAVE PREENCHIDA.
-const ASAAS_API_KEY = '$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OjBkMDM3YzA4LTU0OWMtNGY3Ny1hYjFmLWZlNzk4N2VkNzk4OTo6JGFhY2hfOGY0MzNlYzctNjlmNi00ZjMyLTk4ZTctYjBiYWNiMTJjNGIw';
-
-// 2. SUBSTITUA PELO ID DE UM CLIENTE JÁ CADASTRADO NA SUA CONTA ASAAS.
-//    Você pode criar um cliente "Consumidor Final" no painel da Asaas e usar o ID aqui.
-//    O ID do cliente começa com "cus_...".
-const CUSTOMER_ID = 'cus_123544606';
-
-// 3. MUDE PARA A URL DE PRODUÇÃO QUANDO ESTIVER PRONTO.
-//    Sandbox (para testes): https://sandbox.asaas.com/api/v3
-//    Produção (real): https://api.asaas.com/api/v3
+// URL base da API do Asaas. Mantenha esta para transações reais.
 const ASAAS_API_URL = 'https://api.asaas.com/api/v3'; 
 
 
-// --- CONFIGURAÇÃO DO SERVIDOR ---
+// --- SERVIR ARQUIVOS ESTÁTICOS ---
+// Esta é a correção importante:
+// A linha abaixo diz ao servidor que a pasta onde ele está rodando (__dirname)
+// também contém os arquivos do site (como o index.html).
+// Quando alguém acessar a URL principal, o Express vai automaticamente procurar e enviar o index.html.
+app.use(express.static(__dirname));
 
-// Serve o arquivo index.html como a página principal
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
 
-// Endpoint que a página vai chamar para criar a cobrança PIX
+// --- ROTA PARA GERAR A COBRANÇA PIX ---
+// Esta é a URL que o seu site chama quando o cliente clica em "Finalizar Compra"
+// O endereço completo será, por exemplo: https://labububr.onrender.com/gerar-pix
 app.post('/gerar-pix', async (req, res) => {
-    console.log("Recebida requisição para gerar cobrança PIX...");
+    console.log("LOG: Requisição para /gerar-pix recebida.");
 
-    const payload = {
+    // Verificação de segurança: checa se as chaves foram carregadas corretamente no servidor.
+    if (!ASAAS_API_KEY || !CUSTOMER_ID) {
+        console.error("ERRO GRAVE: Chave de API (ASAAS_API_KEY) ou ID do Cliente (CUSTOMER_ID) não estão configurados nas Variáveis de Ambiente do Render.");
+        return res.status(500).json({ success: false, message: "Erro de configuração interna do servidor." });
+    }
+
+    // Objeto com os detalhes da cobrança que serão enviados para a Asaas
+    const cobranca = {
         customer: CUSTOMER_ID,
         billingType: "PIX",
-        value: 38.84, // Valor total (produto + frete)
-        dueDate: new Date(new Date().getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0], // Expira em 24h
-        description: "Pedido #1 - Boneco Colecionável Labubu Pop Mart",
+        value: 38.84, // Valor total do pedido (produto R$29,90 + frete R$8,94)
+        dueDate: new Date(new Date().getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0], // Define a validade do Pix para 24 horas
+        description: "Pedido Toca da Labubu - Boneco Colecionável",
     };
 
     try {
-        // 1. Cria a cobrança no Asaas
-        const chargeResponse = await axios.post(`${ASAAS_API_URL}/payments`, payload, {
+        // 1. Faz a chamada para a API do Asaas para criar a cobrança
+        const chargeResponse = await axios.post(`${ASAAS_API_URL}/payments`, cobranca, {
             headers: {
                 'Content-Type': 'application/json',
-                'access_token': ASAAS_API_KEY
+                'access_token': ASAAS_API_KEY // Usa a chave secreta no cabeçalho
             }
         });
 
         const paymentId = chargeResponse.data.id;
-        console.log(`Cobrança criada com sucesso. ID: ${paymentId}`);
+        console.log(`LOG: Cobrança PIX criada com sucesso no Asaas. ID: ${paymentId}`);
 
-        // 2. Busca o QR Code para essa cobrança recém-criada
+        // 2. Com o ID da cobrança, busca os dados do QR Code correspondente
         const qrCodeResponse = await axios.get(`${ASAAS_API_URL}/payments/${paymentId}/pixQrCode`, {
             headers: {
                 'access_token': ASAAS_API_KEY
             }
         });
+        
+        console.log("LOG: Dados do QR Code obtidos com sucesso.");
 
-        console.log("QR Code e payload obtidos com sucesso.");
-
-        // 3. Envia os dados do QR Code de volta para a página do cliente
-        res.status(200).json({
+        // 3. Envia a imagem do QR Code e o código "Copia e Cola" de volta para a página do cliente
+        return res.status(200).json({
             success: true,
-            encodedImage: qrCodeResponse.data.encodedImage, // A imagem do QR Code em base64
-            payload: qrCodeResponse.data.payload // O código "Copia e Cola"
+            encodedImage: qrCodeResponse.data.encodedImage, // Imagem em base64
+            payload: qrCodeResponse.data.payload // Código "Copia e Cola"
         });
 
     } catch (error) {
+        // Em caso de erro, exibe os detalhes no log do servidor (lá no Render) para depuração
         console.error("ERRO AO COMUNICAR COM A ASAAS:", error.response ? error.response.data : error.message);
-        res.status(500).json({ 
+        
+        // E envia uma resposta de erro genérica para o cliente
+        return res.status(500).json({ 
             success: false, 
-            message: "Não foi possível gerar a cobrança PIX. Verifique as chaves e o saldo no servidor." 
+            message: "Ocorreu um erro ao comunicar com o sistema de pagamento. Tente novamente." 
         });
     }
 });
 
+
+// --- INICIALIZAÇÃO DO SERVIDOR ---
+// O Render nos informa em qual "porta" devemos rodar o servidor através da variável de ambiente PORT.
+// Se não estiver no Render (rodando localmente), ele usará a porta 3000 como padrão.
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta http://localhost:${PORT}`);
+    // Esta mensagem aparecerá no log do Render quando o servidor iniciar com sucesso.
+    console.log(`Servidor iniciado e ouvindo na porta ${PORT}`);
 });
