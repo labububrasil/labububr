@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const ASAAS_API_KEY = process.env.$aact_prod_000MzkwODA2MWY2OGM3MWRlMDU2NWM3MzJlNzZmNGZhZGY6OmNiMWVkMmMxLWFlMjgtNGE5OS1hYmZmLTI4OWQ1Nzg1OTNiMzo6JGFhY2hfZGFmOTM0YjMtZWZlMS00YzE1LTlhMzgtYzE5MWYxYThkODgz; 
+const ASAAS_API_KEY = process.env.ASAAS_API_KEY; 
 const ASAAS_API_URL = 'https://www.asaas.com/api/v3'; 
 
 app.use(express.static(__dirname));
