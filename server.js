@@ -24,7 +24,7 @@ app.post('/gerar-pix', async (req, res) => {
     
     const cobranca = {
         billingType: "PIX",
-        value: 38.84,
+        value: 29.90,
         dueDate: new Date(new Date().getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         description: "Pedido Toca da Labubu - Boneco Colecionável",
         customer: {
