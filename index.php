@@ -555,7 +555,7 @@
             button.disabled = true;
             
             try {
-                const response = await fetch('/gerar-pix', { method: 'POST' });
+                const response = await fetch('https://labububr.onrender.com/gerar-pix', { method: 'POST' });
                 if (!response.ok) throw new Error('Falha ao gerar cobrança.');
                 
                 const data = await response.json();
