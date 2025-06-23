@@ -28,7 +28,7 @@ app.post('/gerar-pix', async (req, res) => {
         dueDate: new Date(new Date().getTime() + (24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         description: "Pedido Toca da Labubu - Boneco Colecionável",
         customer: {
-            name: "Cliente Site Labubu",
+            name: "PAGAMENTO SEGURO",
             cpfCnpj: "60922170000155" // IMPORTANTE: Coloque seu CPF/CNPJ aqui
         }
     };
