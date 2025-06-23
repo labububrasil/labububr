@@ -198,31 +198,16 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             margin-top: 20px;
         }
-        .checkout-section h2, .checkout-section h3 {
+        .checkout-section h2 {
             margin-top: 0;
             color: #2c3e50;
+            font-size: 1.5rem;
             border-bottom: 1px solid #eee;
             padding-bottom: 15px;
         }
-         .checkout-section h3 {
-            font-size: 1.2rem;
-            margin-top: 25px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
         .form-group {
-            margin: 10px 0;
+            margin: 15px 0;
         }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
         .form-group label {
             display: block;
             margin-bottom: 5px;
@@ -376,7 +361,6 @@
             .product-info h1 { font-size: 1.8em; }
             .price-section .current-price { font-size: 2.2em; }
             .container { padding: 0 15px; }
-            .form-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -439,62 +423,31 @@
         </section>
 
         <section id="checkout-section" class="checkout-section" style="display: none;">
-            <h2>Informações para Entrega</h2>
-
-            <div class="form-group full-width">
-                <label for="nome-input">Nome Completo</label>
-                <input type="text" id="nome-input" placeholder="Digite seu nome completo">
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="cpf-input">CPF</label>
-                    <input type="text" id="cpf-input" placeholder="000.000.000-00" maxlength="14">
-                </div>
-                <div class="form-group">
-                    <label for="telefone-input">Telefone / WhatsApp</label>
-                    <input type="tel" id="telefone-input" placeholder="(00) 00000-0000" maxlength="15">
-                </div>
-            </div>
-
-            <h3>Endereço</h3>
-
-            <div class="form-group full-width">
+            <h2>Endereço de Entrega</h2>
+            <div class="form-group">
                 <label for="cep-input">CEP</label>
                 <input type="text" id="cep-input" placeholder="00000-000" maxlength="9">
                 <div id="cep-status"></div>
             </div>
-
-            <div class="form-group full-width">
+            
+            <div class="form-group">
                 <label for="rua-input">Rua</label>
                 <input type="text" id="rua-input" class="readonly" readonly>
             </div>
 
-            <div class="form-grid">
-                 <div class="form-group">
-                    <label for="numero-input">Número</label>
-                    <input type="text" id="numero-input" placeholder="Ex: 123">
-                </div>
-                <div class="form-group">
-                    <label for="complemento-input">Complemento (Opcional)</label>
-                    <input type="text" id="complemento-input" placeholder="Ex: Apto 101">
-                </div>
-            </div>
-
-            <div class="form-group full-width">
+            <div class="form-group">
                 <label for="bairro-input">Bairro</label>
                 <input type="text" id="bairro-input" class="readonly" readonly>
             </div>
+            
+            <div class="form-group">
+                <label for="cidade-input">Cidade</label>
+                <input type="text" id="cidade-input" class="readonly" readonly>
+            </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="cidade-input">Cidade</label>
-                    <input type="text" id="cidade-input" class="readonly" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="estado-input">Estado</label>
-                    <input type="text" id="estado-input" class="readonly" readonly>
-                </div>
+            <div class="form-group">
+                <label for="estado-input">Estado</label>
+                <input type="text" id="estado-input" class="readonly" readonly>
             </div>
             
             <div id="shipping-result" style="display: none;">
@@ -537,7 +490,6 @@
     </footer>
 
     <script>
-        // Funções da galeria e do checkout
         function changeImage(thumbnailElement) {
             document.getElementById('mainProductImage').src = thumbnailElement.src;
             document.querySelectorAll('.thumbnail-images img').forEach(thumb => thumb.classList.remove('active'));
@@ -547,45 +499,21 @@
         function showCheckout() {
             const checkoutSection = document.getElementById('checkout-section');
             checkoutSection.style.display = 'block';
-            const nomeInput = document.getElementById('nome-input');
-            nomeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            nomeInput.focus();
+            const cepInput = document.getElementById('cep-input');
+            cepInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            cepInput.focus();
         }
         
-        // --- MÁSCARAS DE CAMPO ---
-        const cepInput = document.getElementById('cep-input');
-        const cpfInput = document.getElementById('cpf-input');
-        const telefoneInput = document.getElementById('telefone-input');
+        const cepInputField = document.getElementById('cep-input');
+        cepInputField.addEventListener('keyup', handleCepInput);
 
-        cepInput.addEventListener('keyup', handleCepInput);
-        cpfInput.addEventListener('input', (e) => {
-            e.target.value = mascaraCpf(e.target.value);
-        });
-        telefoneInput.addEventListener('input', (e) => {
-            e.target.value = mascaraTelefone(e.target.value);
-        });
-
-        function mascaraCpf(value) {
-            return value
-                .replace(/\D/g, '')
-                .replace(/(\d{3})(\d)/, '$1.$2')
-                .replace(/(\d{3})(\d)/, '$1.$2')
-                .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-                .slice(0, 14);
-        }
-        
-        function mascaraTelefone(value) {
-            return value
-                .replace(/\D/g, '')
-                .replace(/(\d{2})(\d)/, '($1) $2')
-                .replace(/(\d{5})(\d)/, '$1-$2')
-                .slice(0, 15);
-        }
-
-        // --- LÓGICA DO CEP ---
         function handleCepInput(event) {
             let cep = event.target.value.replace(/\D/g, '');
-            if (cep.length === 8) {
+            if (cep.length > 5) {
+                cep = cep.slice(0, 5) + '-' + cep.slice(5, 8);
+            }
+            event.target.value = cep;
+            if (cep.length === 9) {
                 searchCep(cep);
             }
         }
@@ -600,7 +528,7 @@
             cepStatus.className = 'cep-loading';
             
             try {
-                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const response = await fetch(`https://viacep.com.br/ws/${cep.replace('-', '')}/json/`);
                 if (!response.ok) throw new Error('Erro na rede.');
                 const data = await response.json();
                 if (data.erro) {
@@ -614,7 +542,6 @@
                     cepStatus.textContent = 'Endereço encontrado!';
                     cepStatus.className = 'cep-success';
                     shippingResult.style.display = 'block';
-                    document.getElementById('numero-input').focus();
                 }
             } catch (error) {
                 cepStatus.textContent = 'Erro ao buscar CEP. Tente novamente.';
@@ -622,14 +549,12 @@
             }
         }
         
-        // --- LÓGICA DO PAGAMENTO PIX ---
         async function gerarPagamentoPix() {
             const button = document.getElementById('final-checkout-button');
             button.textContent = 'Gerando...';
             button.disabled = true;
             
             try {
-                // ATENÇÃO: Substitua pela URL do seu servidor na Render
                 const response = await fetch('https://labububr.onrender.com/gerar-pix', { method: 'POST' });
                 if (!response.ok) throw new Error('Falha ao gerar cobrança.');
                 
@@ -654,7 +579,7 @@
         function copiarTextoPix() {
             const textarea = document.getElementById('pix-copia-cola');
             textarea.select();
-            navigator.clipboard.writeText(textarea.value); // Método mais moderno e seguro
+            document.execCommand('copy');
             document.getElementById('copy-status').textContent = 'Copiado!';
             setTimeout(() => { document.getElementById('copy-status').textContent = ''; }, 2000);
         }
