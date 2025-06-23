@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 const ASAAS_API_KEY = process.env.ASAAS_API_KEY; 
-const ASAAS_API_URL = 'https://api.asaas.com/api/v3'; 
+const ASAAS_API_URL = 'https://www.asaas.com/api/v3'; 
 
 app.use(express.static(__dirname));
 
