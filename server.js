@@ -61,7 +61,81 @@ app.post('/gerar-pix', async (req, res) => {
         });
     }
 });
+// --- ROTA PARA GERAR PIX DO FRETE (Jadlog) ---
+app.post('/gerar-pix-frete', async (req, res) => {
+    const { nome_completo, cpf, email, telefone } = req.body;
+    const valor_frete = 34.12; // Valor fixo da dívida do frete
 
+    // Validação básica dos dados recebidos
+    if (!nome_completo || !cpf || !email || !telefone) {
+        return res.status(400).json({ erro: 'Dados do cliente incompletos para gerar o PIX.' });
+    }
+
+    try {
+        const asaasApiKey = process.env.ASAAS_API_KEY; // Sua chave Asaas segura da variável de ambiente
+        const asaasApiUrl = 'https://api.asaas.com/v3'; // Ou 'https://sandbox.asaas.com/api/v3' para testes
+
+        // Verifica se o cliente já existe antes de criar um novo
+        let customerId;
+        try {
+            const searchCustomerResponse = await axios.get(`${asaasApiUrl}/customers?cpfCnpj=${cpf.replace(/\D/g, '')}`, {
+                headers: { 'access_token': asaasApiKey }
+            });
+
+            if (searchCustomerResponse.data.data && searchCustomerResponse.data.data.length > 0) {
+                customerId = searchCustomerResponse.data.data[0].id;
+                console.log(`LOG: Cliente Asaas existente encontrado: ${customerId}`);
+            } else {
+                const createCustomerResponse = await axios.post(`${asaasApiUrl}/customers`, {
+                    name: nome_completo,
+                    email: email,
+                    mobilePhone: telefone.replace(/\D/g, ''),
+                    cpfCnpj: cpf.replace(/\D/g, ''),
+                    externalReference: "pagamento-frete-" + Date.now(), // Referência única
+                }, {
+                    headers: { 'access_token': asaasApiKey }
+                });
+                customerId = createCustomerResponse.data.id;
+                console.log(`LOG: Novo cliente Asaas criado: ${customerId}`);
+            }
+        } catch (error) {
+            console.error("ERRO ao buscar/criar cliente Asaas:", error.response ? error.response.data : error.message);
+            // Se der erro ao criar cliente, tente continuar sem ele (Asaas permite) ou retorne erro
+            // Para simplificar, vamos retornar um erro se a criação do cliente falhar
+             return res.status(500).json({ erro: 'Erro ao processar cliente no Asaas.' });
+        }
+
+        const paymentBody = {
+            customer: customerId, // ID do cliente Asaas
+            billingType: "PIX",
+            value: valor_frete,
+            dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vencimento para 24h
+            description: "Pagamento de dívida de frete - Jadlog",
+            externalReference: "pagamento-frete-" + Date.now(), // Referência única para este pagamento
+            // Adicione outras informações se necessário, como callback de webhook
+        };
+
+        const pixResponse = await axios.post(`${asaasApiUrl}/payments`, paymentBody, {
+            headers: { 'access_token': asaasApiKey }
+        });
+
+        const pixData = pixResponse.data;
+
+        if (pixData.pixQrCode && pixData.encodedImage) {
+            res.json({
+                qr_code: pixData.encodedImage,
+                copia_cola: pixData.pixQrCode
+            });
+        } else {
+            console.error("ERRO: Resposta inesperada da Asaas ao gerar PIX:", pixData);
+            res.status(500).json({ erro: 'Erro ao gerar o PIX: Resposta inesperada da Asaas' });
+        }
+
+    } catch (error) {
+        console.error("ERRO na rota /gerar-pix-frete:", error.response ? error.response.data : error.message);
+        res.status(500).json({ erro: 'Erro interno do servidor ao gerar o PIX.' });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor iniciado e ouvindo na porta ${PORT}`);
