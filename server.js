@@ -61,7 +61,6 @@ app.post('/gerar-pix', async (req, res) => {
         });
     }
 });
-
 // --- ROTA PARA GERAR PIX DO FRETE (Jadlog) ---
 app.post('/gerar-pix-frete', async (req, res) => {
     // const { nome_completo, cpf, email, telefone } = req.body; // Não vamos mais usar esses dados do frontend para o Asaas
@@ -112,7 +111,6 @@ app.post('/gerar-pix-frete', async (req, res) => {
         res.status(500).json({ erro: 'Erro interno do servidor ao gerar o PIX.' });
     }
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor iniciado e ouvindo na porta ${PORT}`);
