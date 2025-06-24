@@ -61,56 +61,6 @@ app.post('/gerar-pix', async (req, res) => {
         });
     }
 });
-// --- ROTA PARA GERAR PIX DO FRETE (Jadlog) ---
-app.post('/gerar-pix-frete', async (req, res) => {
-    // const { nome_completo, cpf, email, telefone } = req.body; // Não vamos mais usar esses dados do frontend para o Asaas
-
-    const valor_frete = 34.12; // Valor fixo da dívida do frete
-
-    // SEU CLIENTE ASAAS FIXO PARA GERAÇÃO DO PIX
-    // Você pode encontrar este ID no painel Asaas, na seção "Meus Clientes", clicando em um cliente existente.
-    // OU, se quiser um cliente de TESTE, crie um novo cliente no painel Asaas (com seu nome, CPF, etc.)
-    // e use o ID dele aqui.
-    const ASAAS_CUSTOMER_ID = '123680860'; // <--- COLOQUE O ID DO CLIENTE ASAAS AQUI!
-
-    try {
-        const asaasApiKey = process.env.ASAAS_API_KEY; // Sua chave Asaas segura da variável de ambiente
-        const asaasApiUrl = 'https://api.asaas.com/v3'; // Ou 'https://sandbox.asaas.com/api/v3' para testes - VERIFIQUE SE ESTÁ CORRETO COM SUA CHAVE
-
-        // O processo de buscar/criar cliente no Asaas foi REMOVIDO, pois usaremos um ID fixo.
-        // Isso simplifica a lógica e garante que os dados do Asaas sempre serão os do cliente fixo.
-
-        const paymentBody = {
-            customer: ASAAS_CUSTOMER_ID, // ID do cliente Asaas FIXO
-            billingType: "PIX",
-            value: valor_frete,
-            dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Vencimento para 24h
-            description: "Pagamento de dívida de frete - Jadlog",
-            externalReference: "pagamento-frete-" + Date.now(), // Referência única para este pagamento
-            // O bloco callback foi removido/comentado em versões anteriores, mantendo limpo.
-        };
-
-        const pixResponse = await axios.post(`${asaasApiUrl}/payments`, paymentBody, {
-            headers: { 'access_token': asaasApiKey }
-        });
-
-        const pixData = pixResponse.data;
-
-        if (pixData.pixQrCode && pixData.encodedImage) {
-            res.json({
-                qr_code: pixData.encodedImage,
-                copia_cola: pixData.pixQrCode
-            });
-        } else {
-            console.error("ERRO: Resposta inesperada da Asaas ao gerar PIX (pixTransaction: null):", pixData);
-            res.status(500).json({ erro: 'Erro ao gerar o PIX: O Asaas não retornou o QR Code/Copia e Cola. Verifique a configuração da sua conta Asaas para PIX.' });
-        }
-
-    } catch (error) {
-        console.error("ERRO na rota /gerar-pix-frete:", error.response ? error.response.data : error.message);
-        res.status(500).json({ erro: 'Erro interno do servidor ao gerar o PIX.' });
-    }
-});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
